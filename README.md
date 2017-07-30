@@ -22,4 +22,4 @@ Hopefully this set of examples will help you get started and get your gl bearing
 
 When possible, I've copied the examples as faithfully as possible. What that means is that there may be better ways to approach some challenges - but what you'll find here is as close to the original tutorial as I can manage.
 
-![Touch Screen Shot](https://raw.githubusercontent.com/raganmd/BOS-in-TouchDesigner/master/repo-assets/BOS-screen-shot.PNG)
+![Touch Screen Shot](https://raw.githubusercontent.com/raganmd/BOS-in-TouchDesigner/master/repo-assets/screen-shot.PNG)

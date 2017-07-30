@@ -31,8 +31,8 @@
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Tutorial 1
-// VOID. BLANK SCREEN.
+// Tutorial 2
+// SOLID COLOR
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
@@ -47,14 +47,21 @@ void main()
 {
 
 	// Uğur Güney
-	// "main" function is called several times per second to produce
-	// the shader effect.
-	// The system aims to produces a speed of 60 frames per second (FPS).
-	// But if the GLSL script is computationally hard, then the frame
-	// rate drops. (You can read the frame rate at the info bar below
-	// the screen.
 	//
-	// Because we are not doing anything in the function
-	// this shader will produce a black screen.
-	
+	// "fragColor" is the output variable of the shader.
+	// Its value determines the image on the screen.
+	// This shaders sets its value to be the yellow color.
+
+	vec3 color 		= vec3(1.0, 1.0, 0.0);
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+	// Matthew Ragan
+	// TDOutputSwizzle is a TouchDesigner function that helps ensure 
+	// consistent behavior between mac and pc versions of touch. What's
+	// important to know here is that you need to provide this function
+	// with a vec4. Because our example above doesn't consider alpha, 
+	// we can construct a vec4 out of our variable color, and an additional
+	// value of 1.0 for the alpha channel.
+	fragColor 		= TDOutputSwizzle(vec4( color, 1.0 ));
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -	
 }

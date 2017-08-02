@@ -31,22 +31,19 @@
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Tutorial 20
-// COLOR ADDITION AND SUBSTRACTION
+// Tutorial 25
+// PLASMA EFFECT
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
-// How to draw a shape on top of another, and how will the layers
-// below, affect the higher layers?
+// We said that the a pixel's color only depends on its coordinates
+// and other inputs (such as time)
+// 
+// There is an effect called Plasma, which is based on a mixture of
+// complex function in the form of f(x,y).
 //
-// In the previous shape drawing functions, we set the pixel
-// value from the function. This time the shape function will
-// just return a float value between 0.0 and 1.0 to indice the
-// shape area. Later that value can be multiplied with some color
-// and used in determining the final pixel color.
-
-// A function that returns the 1.0 inside the disk area
-// returns 0.0 outside the disk area
-// and has a smooth transition at the radius
+// Let's write a plasma!
+//
+// http://en.wikipedia.org/wiki/Plasma_effect
 
 #define PI 3.14159265359
 #define TWOPI 6.28318530718
@@ -54,18 +51,9 @@
 // uniforms
 uniform float uTime;
 uniform vec2 uRes;
-uniform float uRadius 		= 0.35;
-uniform vec2 uOffset1 		= vec2(	0.75, 0.3);
-uniform vec2 uOffset2 		= vec2(	1.0, 0.0);
-uniform vec2 uOffset3 		= vec2(	0.8, 0.25);
 
 // functions
-float disk(vec2 r, vec2 center, float radius) {
-	float distanceFromCenter = length(r-center);
-	float outsideOfDisk = smoothstep( radius-0.005, radius+0.005, distanceFromCenter);
-	float insideOfDisk = 1.0 - outsideOfDisk;
-	return insideOfDisk;
-}
+
 
 out vec4 fragColor;
 void main()
@@ -105,54 +93,48 @@ void main()
 	vec2 aspect 					= uRes/uRes.x;
 	r 								*= aspect;
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	vec3 black 						= vec3(0.0);
-	vec3 white 						= vec3(1.0);
-	vec3 gray 						= vec3(0.3);
-	vec3 col1 						= vec3(0.216, 0.471, 0.698); // blue
-	vec3 col2 						= vec3(1.00, 0.329, 0.298); // red
-	vec3 col3 						= vec3(0.867, 0.910, 0.247); // yellow
+	float t 						= uTime;
+    r 								= r * 8.0;
+	
+    float v1 						= sin(r.x +t);
+    float v2 						= sin(r.y +t);
+    float v3 						= sin(r.x+r.y +t);
+    float v4 						= sin(length(r) +1.7*t);
+	float v 						= v1+v2+v3+v4;
 	
 	vec3 ret;
-	float d;
 	
-	if(p.x < 1./3.) { // Part I
-		// opaque layers on top of each other
-		ret 						= gray;
-		// assign a gray value to the pixel first
-		d 							= disk(r, vec2(-0.75,0.3), uRadius);
-		ret 						= mix(ret, col1, d); // mix the previous color value with
-		    						                     // the new color value according to
-		    						                     // the shape area function.
-		    						                     // at this line, previous color is gray.
-		d 							= disk(r, vec2(-0.65,0.0), uRadius);
-		ret 						= mix(ret, col2, d);
-		d 							= disk(r, vec2(-0.7,-0.3), uRadius); 
-		ret							= mix(ret, col3, d); // here, previous color can be gray,
-		   							                     // blue or pink.
+	if(p.x < 1./10.) { // Part I
+		// vertical waves
+		ret 						= vec3(v1);
 	} 
-	else if(p.x < 2./3.) { // Part II
-		// Color addition
-		// This is how lights of different colors add up
-		// http://en.wikipedia.org/wiki/Additive_color
-		ret 						= black; // start with black pixels
-		ret 						+= disk(r, vec2(0.0,0.3), uRadius)*col1; // add the new color
-		    						                                     // to the previous color
-		ret 						+= disk(r, vec2(0.1,0.0), uRadius)*col2;
-		ret 						+= disk(r, vec2(0.05,-0.3), uRadius)*col3;
-		// when all components of "ret" becomes equal or higher than 1.0
-		// it becomes white.
+	else if(p.x < 2./10.) { // Part II
+		// horizontal waves
+		ret 						= vec3(v2);
 	} 
-	else if(p.x < 3./3.) { // Part III
-		// Color substraction
-		// This is how dye of different colors add up
-		// http://en.wikipedia.org/wiki/Subtractive_color
-		ret 						= white; // start with white
-		ret 						-= disk(r, vec2(0.75,0.3), uRadius)*col1;
-		ret 						-= disk(r, vec2(0.65,0.0), uRadius)* col2;
-		ret 						-= disk(r, vec2(0.7,-0.25), uRadius)* col3;			
-		// when all components of "ret" becomes equals or smaller than 0.0
-		// it becomes black.
+	else if(p.x < 3./10.) { // Part III
+		// diagonal waves
+		ret 						= vec3(v3);
 	}
+	else if(p.x < 4./10.) { // Part IV
+		// circular waves
+		ret 						= vec3(v4);
+	}
+	else if(p.x < 5./10.) { // Part V
+		// the sum of all waves
+		ret 						= vec3(v);
+	}	
+	else if(p.x < 6./10.) { // Part VI
+		// Add periodicity to the gradients
+		ret 						= vec3(sin(2.*v));
+	}
+	else if(p.x < 10./10.) { // Part VII
+		// mix colors
+		v 							*= 1.0;
+		ret 						= vec3(sin(v), sin(v+0.5*PI), sin(v+1.0*PI));
+	}	
+	
+	ret 							= 0.5 + 0.5*ret;
 	
 	vec3 pixel 						= ret;
 

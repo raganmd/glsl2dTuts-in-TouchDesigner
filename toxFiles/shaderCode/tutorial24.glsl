@@ -31,22 +31,15 @@
 */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Tutorial 20
-// COLOR ADDITION AND SUBSTRACTION
+// Tutorial 24
+// TIME, MOTION AND ANIMATION
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
-// How to draw a shape on top of another, and how will the layers
-// below, affect the higher layers?
+// One of the inputs that a shader gets can be the time.
+// In ShaderToy, "uTime" variable holds the value of the
+// time in seconds since the shader is started.
 //
-// In the previous shape drawing functions, we set the pixel
-// value from the function. This time the shape function will
-// just return a float value between 0.0 and 1.0 to indice the
-// shape area. Later that value can be multiplied with some color
-// and used in determining the final pixel color.
-
-// A function that returns the 1.0 inside the disk area
-// returns 0.0 outside the disk area
-// and has a smooth transition at the radius
+// Let's change some variables in time!
 
 #define PI 3.14159265359
 #define TWOPI 6.28318530718
@@ -54,17 +47,20 @@
 // uniforms
 uniform float uTime;
 uniform vec2 uRes;
-uniform float uRadius 		= 0.35;
-uniform vec2 uOffset1 		= vec2(	0.75, 0.3);
-uniform vec2 uOffset2 		= vec2(	1.0, 0.0);
-uniform vec2 uOffset3 		= vec2(	0.8, 0.25);
 
 // functions
 float disk(vec2 r, vec2 center, float radius) {
-	float distanceFromCenter = length(r-center);
-	float outsideOfDisk = smoothstep( radius-0.005, radius+0.005, distanceFromCenter);
-	float insideOfDisk = 1.0 - outsideOfDisk;
-	return insideOfDisk;
+	return 1.0 - smoothstep( radius-0.005, radius+0.005, length(r-center));
+}
+
+float rect(vec2 r, vec2 bottomLeft, vec2 topRight) {
+	float ret;
+	float d = 0.005;
+	ret = smoothstep(bottomLeft.x-d, bottomLeft.x+d, r.x);
+	ret *= smoothstep(bottomLeft.y-d, bottomLeft.y+d, r.y);
+	ret *= 1.0 - smoothstep(topRight.y-d, topRight.y+d, r.y);
+	ret *= 1.0 - smoothstep(topRight.x-d, topRight.x+d, r.x);
+	return ret;
 }
 
 out vec4 fragColor;
@@ -105,53 +101,80 @@ void main()
 	vec2 aspect 					= uRes/uRes.x;
 	r 								*= aspect;
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-	vec3 black 						= vec3(0.0);
-	vec3 white 						= vec3(1.0);
-	vec3 gray 						= vec3(0.3);
+	float xMax 						= uRes.x/uRes.y;
+
 	vec3 col1 						= vec3(0.216, 0.471, 0.698); // blue
-	vec3 col2 						= vec3(1.00, 0.329, 0.298); // red
-	vec3 col3 						= vec3(0.867, 0.910, 0.247); // yellow
+	vec3 col2 						= vec3(1.00, 0.329, 0.298); // yellow
+	vec3 col3 						= vec3(0.867, 0.910, 0.247); // red
 	
 	vec3 ret;
-	float d;
-	
-	if(p.x < 1./3.) { // Part I
-		// opaque layers on top of each other
-		ret 						= gray;
-		// assign a gray value to the pixel first
-		d 							= disk(r, vec2(-0.75,0.3), uRadius);
-		ret 						= mix(ret, col1, d); // mix the previous color value with
-		    						                     // the new color value according to
-		    						                     // the shape area function.
-		    						                     // at this line, previous color is gray.
-		d 							= disk(r, vec2(-0.65,0.0), uRadius);
-		ret 						= mix(ret, col2, d);
-		d 							= disk(r, vec2(-0.7,-0.3), uRadius); 
-		ret							= mix(ret, col3, d); // here, previous color can be gray,
-		   							                     // blue or pink.
+		
+	if(p.x < 1./5.) { // Part I
+		vec2 q 						= r + vec2(xMax*4./5.,0.);
+		ret 						= vec3(0.2);
+		// y coordinate depends on time
+		float y 					= uTime;
+		// mod constraints y to be between 0.0 and 2.0,
+		// and y jumps from 2.0 to 0.0
+		// substracting -1.0 makes why jump from 1.0 to -1.0
+		y 							= mod(y, 2.0) - 1.0;
+		ret 						= mix(ret, col1, disk(q, vec2(0.0, y), 0.1) );
 	} 
-	else if(p.x < 2./3.) { // Part II
-		// Color addition
-		// This is how lights of different colors add up
-		// http://en.wikipedia.org/wiki/Additive_color
-		ret 						= black; // start with black pixels
-		ret 						+= disk(r, vec2(0.0,0.3), uRadius)*col1; // add the new color
-		    						                                     // to the previous color
-		ret 						+= disk(r, vec2(0.1,0.0), uRadius)*col2;
-		ret 						+= disk(r, vec2(0.05,-0.3), uRadius)*col3;
-		// when all components of "ret" becomes equal or higher than 1.0
-		// it becomes white.
+	else if(p.x < 2./5.) { // Part II
+		vec2 q 						= r + vec2(xMax*2./5.,0.);
+		ret 						= vec3(0.3);
+		// oscillation
+		float amplitude 			= 0.8;
+		// y coordinate oscillates with a period of 0.5 seconds
+		float y 					= 0.8*sin(0.5*uTime*TWOPI);
+		// radius oscillates too
+		float radius 				= 0.15 + 0.05*sin(uTime*8.0);
+		ret 						= mix(ret, col1, disk(q, vec2(0.0, y), radius) );		
 	} 
-	else if(p.x < 3./3.) { // Part III
-		// Color substraction
-		// This is how dye of different colors add up
-		// http://en.wikipedia.org/wiki/Subtractive_color
-		ret 						= white; // start with white
-		ret 						-= disk(r, vec2(0.75,0.3), uRadius)*col1;
-		ret 						-= disk(r, vec2(0.65,0.0), uRadius)* col2;
-		ret 						-= disk(r, vec2(0.7,-0.25), uRadius)* col3;			
-		// when all components of "ret" becomes equals or smaller than 0.0
-		// it becomes black.
+	else if(p.x < 3./5.) { // Part III
+		vec2 q 						= r + vec2(xMax*0./5.,0.);
+		ret 						= vec3(0.4);
+		// booth coordinates oscillates
+		float x 					= 0.2*cos(uTime*5.0);
+		// but they have a phase difference of PI/2
+		float y 					= 0.3*cos(uTime*5.0 + PI/2.0);
+		float radius 				= 0.2 + 0.1*sin(uTime*2.0);
+		// make the color mixture time dependent
+		vec3 color 					= mix(col1, col2, sin(uTime)*0.5+0.5);
+		ret 						= mix(ret, color, rect(q, vec2(x-0.1, y-0.1), vec2(x+0.1, y+0.1)) );		
+		// try different phases, different amplitudes and different frequencies
+		// for x and y coordinates
+	}
+	else if(p.x < 4./5.) { // Part IV
+		vec2 q 						= r + vec2(-xMax*2./5.,0.);
+		ret 						= vec3(0.3);
+		for(float i=-1.0; i<1.0; i+= 0.2) {
+			float x 				= 0.2*cos(uTime*5.0 + i*PI);
+			// y coordinate is the loop value
+			float y 				= i;
+			vec2 s 					= q - vec2(x, y);
+			// each box has a different phase
+			float angle 			= uTime*3. + i;
+			mat2 rot 				= mat2(cos(angle), -sin(angle), sin(angle),  cos(angle));
+			s 						= rot*s;
+			ret 					= mix(ret, col1, rect(s, vec2(-0.06, -0.06), vec2(0.06, 0.06)) );			
+		}
+	}
+	else if(p.x < 5./5.) { // Part V
+		vec2 q 						= r + vec2(-xMax*4./5., 0.);
+		ret 						= vec3(0.2);
+		// let stop and move again periodically
+		float speed 				= 2.0;
+		float t 					= uTime*speed;
+		float stopEveryAngle 		= PI/2.0;
+		float stopRatio 			= 0.5;
+		float t1 					= (floor(t) + smoothstep(0.0, 1.0-stopRatio, fract(t)) )*stopEveryAngle;
+		
+		float x 					= -0.2*cos(t1);
+		float y 					= 0.3*sin(t1);
+		float dx 					= 0.1 + 0.03*sin(t*10.0);
+		float dy 					= 0.1 + 0.03*sin(t*10.0+PI);
+		ret 						= mix(ret, col1, rect(q, vec2(x-dx, y-dy), vec2(x+dx, y+dy)) );		
 	}
 	
 	vec3 pixel 						= ret;

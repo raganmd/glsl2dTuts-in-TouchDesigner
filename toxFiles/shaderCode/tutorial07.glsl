@@ -58,8 +58,8 @@ void main()
 {
 
 	// Uğur Güney
-	vec2 r 				= vec2(	gl_FragCoord.x / uRes.x,
-				  				gl_FragCoord.y / uRes.y);
+	// vec2 r 				= vec2(	gl_FragCoord.x / uRes.x,
+	//			  				gl_FragCoord.y / uRes.y);
 	// r is a vec2. Its first component is pixel x-coordinate divided by
 	// the frame width. And second component is the pixel y-coordinate
 	// divided by the frame height.
@@ -87,7 +87,7 @@ void main()
 	// already does this for us - vUV.st
 	// for now we'll continue to use Ugur's method, but in the future
 	// you'll see that I replace this computation with the line below. 
-	// vec2 r 				= vUV.st;
+	vec2 r 				= vUV.st;
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 	
 	vec3 color1 		= vec3(0.841, 0.582, 0.594);

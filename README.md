@@ -1,4 +1,4 @@
-# BOS-in-TouchDesigner
+# GLSL 2D Tutorials in TouchDesigner
 
 **Matthew Ragan** |[ matthewragan.com ](http://matthewragan.com) 
 
